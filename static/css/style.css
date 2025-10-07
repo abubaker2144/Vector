@@ -1,5 +1,4 @@
-/* SARA Web Interface Custom Styles */
-
+/* SHADOW-SARA Web Interface Custom Styles (v3.1 - 2025) */
 :root {
     --sara-primary: #0d6efd;
     --sara-secondary: #6c757d;
@@ -22,16 +21,13 @@ body {
 ::-webkit-scrollbar {
     width: 12px;
 }
-
 ::-webkit-scrollbar-track {
     background: var(--sara-darker);
 }
-
 ::-webkit-scrollbar-thumb {
     background: var(--sara-secondary);
     border-radius: 6px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
     background: var(--sara-primary);
 }
@@ -41,13 +37,11 @@ body {
     font-size: 1.5rem;
     text-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
 }
-
 .navbar-nav .nav-link {
     transition: all 0.3s ease;
     border-radius: 0.375rem;
     margin: 0 0.25rem;
 }
-
 .navbar-nav .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
@@ -61,12 +55,10 @@ body {
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
 }
-
 .card:hover {
     transform: translateY(-5px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
-
 .card-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.125);
     border-radius: 0.75rem 0.75rem 0 0 !important;
@@ -81,7 +73,6 @@ body {
     position: relative;
     overflow: hidden;
 }
-
 .btn::before {
     content: '';
     position: absolute;
@@ -92,32 +83,25 @@ body {
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.5s;
 }
-
 .btn:hover::before {
     left: 100%;
 }
-
 .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
-
 .btn-danger {
     background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
 }
-
 .btn-warning {
     background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
 }
-
 .btn-info {
     background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
 }
-
 .btn-success {
     background: linear-gradient(135deg, #198754 0%, #157347 100%);
 }
-
 .btn-primary {
     background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
 }
@@ -130,27 +114,37 @@ body {
     color: #fff;
     transition: all 0.3s ease;
 }
-
 .form-control:focus {
     background-color: rgba(255, 255, 255, 0.15);
     border-color: var(--sara-primary);
     box-shadow: 0 0 15px rgba(13, 110, 253, 0.3);
     color: #fff;
 }
-
 .form-control::placeholder {
     color: rgba(255, 255, 255, 0.5);
 }
-
 .form-label {
     color: #fff;
     font-weight: 500;
     margin-bottom: 0.75rem;
 }
-
 .form-text {
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.875rem;
+}
+
+/* Obfuscate Checkbox Enhancement (جديد) */
+.form-check-input:checked {
+    background-color: var(--sara-primary);
+    border-color: var(--sara-primary);
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+}
+.form-check-label {
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.form-check:hover .form-check-label {
+    color: var(--sara-primary);
 }
 
 /* Progress Bar Enhancements */
@@ -160,14 +154,18 @@ body {
     border-radius: 0.5rem;
     overflow: hidden;
 }
-
 .progress-bar {
     border-radius: 0.5rem;
     transition: width 0.6s ease;
 }
-
 .progress-bar-animated {
     animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* Status Progress Specific (جديد) */
+#progressBar {
+    background: linear-gradient(90deg, var(--sara-primary), var(--sara-info));
+    box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
 }
 
 /* Alert Enhancements */
@@ -177,25 +175,21 @@ body {
     backdrop-filter: blur(10px);
     border-left: 4px solid;
 }
-
 .alert-warning {
     background: rgba(255, 193, 7, 0.1);
     border-left-color: var(--sara-warning);
     color: #fff;
 }
-
 .alert-info {
     background: rgba(13, 202, 240, 0.1);
     border-left-color: var(--sara-info);
     color: #fff;
 }
-
 .alert-success {
     background: rgba(25, 135, 84, 0.1);
     border-left-color: var(--sara-success);
     color: #fff;
 }
-
 .alert-danger {
     background: rgba(220, 53, 69, 0.1);
     border-left-color: var(--sara-danger);
@@ -206,7 +200,6 @@ body {
 .display-1, .display-4 {
     text-shadow: 0 0 20px rgba(13, 110, 253, 0.5);
 }
-
 .bi {
     filter: drop-shadow(0 0 5px rgba(13, 110, 253, 0.3));
 }
@@ -222,7 +215,6 @@ body {
         transform: translateY(0);
     }
 }
-
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
@@ -234,11 +226,9 @@ body {
         box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
     }
 }
-
 .fade-in-up {
     animation: fadeInUp 0.6s ease-out;
 }
-
 .pulse-animation {
     animation: pulse 2s infinite;
 }
@@ -249,16 +239,16 @@ body {
         padding-left: 1rem;
         padding-right: 1rem;
     }
-    
+   
     .card {
         margin-bottom: 1.5rem;
     }
-    
+   
     .btn {
         width: 100%;
         margin-bottom: 0.5rem;
     }
-    
+   
     .btn:last-child {
         margin-bottom: 0;
     }
@@ -269,12 +259,10 @@ footer {
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 footer a {
     text-decoration: none;
     transition: color 0.3s ease;
 }
-
 footer a:hover {
     color: var(--sara-primary) !important;
 }
@@ -297,7 +285,6 @@ code {
 .form-control[type="file"] {
     padding: 0.75rem;
 }
-
 .form-control[type="file"]::-webkit-file-upload-button {
     background: var(--sara-primary);
     border: none;
@@ -308,7 +295,6 @@ code {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-
 .form-control[type="file"]::-webkit-file-upload-button:hover {
     background: #0b5ed7;
 }
@@ -317,15 +303,12 @@ code {
 .text-success {
     color: #20c997 !important;
 }
-
 .text-danger {
     color: #fd7e83 !important;
 }
-
 .text-warning {
     color: #ffda6a !important;
 }
-
 .text-info {
     color: #86cfda !important;
 }
@@ -334,7 +317,6 @@ code {
 .glow {
     box-shadow: 0 0 20px rgba(13, 110, 253, 0.5);
 }
-
 .border-glow {
     border: 2px solid rgba(13, 110, 253, 0.5);
     box-shadow: inset 0 0 20px rgba(13, 110, 253, 0.1);

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}404 - Page Not Found{% endblock %}
+{% block title %}SHADOW-SARA - 404 Page Not Found{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -14,7 +14,7 @@
             <p class="lead mb-4">
                 The page you're looking for doesn't exist or has been moved.
             </p>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-4">
                 <a href="{{ url_for('index') }}" class="btn btn-primary">
                     <i class="bi bi-house"></i> Go Home
                 </a>
@@ -22,6 +22,20 @@
                     <i class="bi bi-arrow-left"></i> Go Back
                 </button>
             </div>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Navigation Tip:</strong> Use the navbar above to explore available tools.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disclaimer -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-6">
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Reminder:</strong> Educational tool only. Stay on authorized paths.
         </div>
     </div>
 </div>
